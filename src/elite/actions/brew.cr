@@ -5,13 +5,14 @@ module Elite::Actions
     ACTION_NAME = "brew"
 
     argument name : String
-    argument state : Symbol, choices: [:present, :latest, :absent], default: :present
-    argument options : Array(String), optional: true, default: [] of String
+    argument state : String, choices: ["present", "latest", "absent"], default: "present"
+    argument options : Array(String), optional: true
 
     def process
       # We"ll work in lowercase as brew is case insensitive
       # TODO: how can we do this more elegantly?  the type can be Nil or a String
       name = @name.to_s.downcase
+      options_a = @options.nil? ? [] of String : @options.as(Array(String))
 
       # Obtain information about the requested package
       brew_info_proc = run(
@@ -19,7 +20,7 @@ module Elite::Actions
       )
 
       # Check whether the package is installed and whether it is outdated
-      if brew_info_proc.exit_code
+      unless brew_info_proc.exit_code == 0
         brew_installed = false
       else
         # Determine if the package is installed and/or outdated
@@ -36,38 +37,39 @@ module Elite::Actions
       end
 
       # Install, upgrade or remove the package as requested
-      if @state == :present
+      case @state
+      when :present
         if brew_installed
           ok
         else
           run(
-            ["brew", "install"] + @options + [name],
+            ["brew", "install"] + options_a + [name],
             fail_error: "unable to install the requested package"
           )
           changed
         end
-      elsif @state == :latest
+      when :latest
         if brew_installed && !brew_outdated
           ok
         elsif brew_installed && brew_outdated
           run(
-            ["brew", "upgrade"] + @options + [name],
+            ["brew", "upgrade"] + options_a + [name],
             fail_error: "unable to upgrade the requested package"
           )
           changed
         else
           run(
-            ["brew", "install"] + @options + [name],
+            ["brew", "install"] + options_a + [name],
             fail_error: "unable to install the requested package"
           )
           changed
         end
-      elsif @state == :absent
+      else # :absent
         unless brew_installed
           ok
         else
           run(
-            ["brew", "remove"] + @options + [name],
+            ["brew", "remove"] + options_a + [name],
             fail_error: "unable to remove the requested package"
           )
           changed

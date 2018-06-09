@@ -30,7 +30,8 @@ module Elite
       def {{ name.var }}(value)
         {% unless choices.empty? %}
           unless {{ choices }}.includes?(value)
-            raise ActionArgumentError.new("{{ name.var }} must be one of {{ choices }}")
+            choices_s = {{ choices[0...-1].join(", ") }} + " or " + {{ choices[-1] }}
+            raise ActionArgumentError.new("{{ name.var }} must be one of #{choices_s}")
           end
         {% end %}
 

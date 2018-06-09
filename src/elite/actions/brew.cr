@@ -10,14 +10,12 @@ module Elite::Actions
 
     def process
       # We"ll work in lowercase as brew is case insensitive
-      # TODO: how can we do this more elegantly?  the type can be Nil or a String
-      name = @name.to_s.downcase
+      name = @name.as(String).downcase
       options_a = @options.nil? ? [] of String : @options.as(Array(String))
 
       # Obtain information about the requested package
-      brew_info_proc = run(
-        ["brew", "info", "--json=v1", name], capture_output: true, ignore_fail: true
-      )
+      brew_info_proc = run(["brew", "info", "--json=v1", name],
+                           capture_output: true, ignore_fail: true)
 
       # Check whether the package is installed and whether it is outdated
       unless brew_info_proc.exit_code == 0
@@ -29,49 +27,40 @@ module Elite::Actions
           brew_info = brew_info_multiple[0]
 
           brew_installed = !brew_info["installed"].as_a.empty?
-          brew_outdated = brew_info["outdated"]
-        # TODO: catch the appropriate exceptions here
-        rescue
+          brew_outdated = brew_info["outdated"].as_bool
+        rescue JSON::ParseException | IndexError | KeyError
           raise ActionProcessingError.new("Unable to parse installed package information")
         end
       end
 
       # Install, upgrade or remove the package as requested
       case @state
-      when :present
+      when "present"
         if brew_installed
           ok
         else
-          run(
-            ["brew", "install"] + options_a + [name],
-            fail_error: "unable to install the requested package"
-          )
+          run(["brew", "install"] + options_a + [name],
+              fail_error: "Unable to install the requested package")
           changed
         end
-      when :latest
+      when "latest"
         if brew_installed && !brew_outdated
           ok
         elsif brew_installed && brew_outdated
-          run(
-            ["brew", "upgrade"] + options_a + [name],
-            fail_error: "unable to upgrade the requested package"
-          )
+          run(["brew", "upgrade"] + options_a + [name],
+              fail_error: "Unable to upgrade the requested package")
           changed
         else
-          run(
-            ["brew", "install"] + options_a + [name],
-            fail_error: "unable to install the requested package"
-          )
+          run(["brew", "install"] + options_a + [name],
+              fail_error: "Unable to install the requested package")
           changed
         end
-      else # :absent
+      else # "absent"
         unless brew_installed
           ok
         else
-          run(
-            ["brew", "remove"] + options_a + [name],
-            fail_error: "unable to remove the requested package"
-          )
+          run(["brew", "remove"] + options_a + [name],
+              fail_error: "Unable to remove the requested package")
           changed
         end
       end

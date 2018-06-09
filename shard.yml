@@ -1,0 +1,9 @@
+name: elite
+version: 0.1.0
+
+authors:
+  - Fotis Gimian <fgimiansoftware@gmail.com>
+
+crystal: 0.24.2+395
+
+license: MIT

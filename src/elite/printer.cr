@@ -51,16 +51,16 @@ module Elite
     # :param action: The action being called.
     # :param args: The arguments sent to the action.
     # :param result: The result of the execution or nil when the task is still running.
-    def action(state : Enum, action : String, args : Hash(String, String | Int | Bool),
+    def action(state : Enum, action : String, args : NamedTuple,
                result : Hash(String, String))
       # Determine the output colour and state text
-      if state == Elite::State::Running
+      if state == State::Running
         print_colour = ANSI::WHITE
         print_state = "running"
-      elsif state == Elite::State::Failed
+      elsif state == State::Failed
         print_colour = ANSI::RED
         print_state = "failed"
-      elsif state == Elite::State::Changed
+      elsif state == State::Changed
         print_colour = ANSI::YELLOW
         print_state = "changed"
       else
@@ -79,7 +79,7 @@ module Elite
       print_action = print_args.empty? ? action : "#{action}: "
 
       # Determine the max characters we can print
-      if state == Elite::State::Running
+      if state == State::Running
         terminal_size = Unixium::Terminal.size
         max_chars = terminal_size.columns * terminal_size.rows
 
@@ -125,7 +125,7 @@ module Elite
         )
 
         # Display the changed or failure message if necessary
-        if state == Elite::State::Failed && result["message"]
+        if state == State::Failed && result["message"]
           puts(
             "#{ANSI::BLUE}#{center("", 10)}message:#{ANSI::ENDC} " \
             "#{ANSI::YELLOW}#{result["message"]}#{ANSI::ENDC}"
@@ -150,7 +150,7 @@ module Elite
       if changed_tasks
         task "Changed task info:"
         changed_tasks.each do |action, args, result|
-          action Elite::State::Changed, action, args, result
+          action State::Changed, action, args, result
         end
       end
 
@@ -158,7 +158,7 @@ module Elite
       if failed_tasks
         task "Failed task info:"
         failed_tasks.each do |action, args, result|
-          action Elite::State::Failed, action, args, result
+          action State::Failed, action, args, result
         end
       end
 

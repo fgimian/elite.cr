@@ -27,7 +27,25 @@ module Elite
       def {{ action_class.constant("ACTION_NAME").id }}
         action = {{ action_class }}.new
         with action yield
-        action.run
+
+        @printer.action(
+          state: State::Running,
+          action: "{{ action_class.constant("ACTION_NAME").id }}",
+          args: action.arguments,
+          result: {} of String => String
+        )
+
+        begin
+          state = action.run
+        rescue ActionError
+        end
+
+        @printer.action(
+          state: State::Changed,
+          action: "{{ action_class.constant("ACTION_NAME").id }}",
+          args: action.arguments,
+          result: {} of String => String
+        )
       end
     {% end %}
   end

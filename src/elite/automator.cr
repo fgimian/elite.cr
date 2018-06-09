@@ -31,21 +31,24 @@ module Elite
         @printer.action(
           state: State::Running,
           action: "{{ action_class.constant("ACTION_NAME").id }}",
-          args: action.arguments,
-          result: {} of String => String
+          args: action.arguments
         )
 
         begin
-          state = action.run
-        rescue ActionError
+          response = action.invoke
+          @printer.action(
+            state: response.changed ? State::Changed : State::OK,
+            action: "{{ action_class.constant("ACTION_NAME").id }}",
+            args: action.arguments
+          )
+        rescue ex : ActionError
+          @printer.action(
+            state: State::Failed,
+            action: "{{ action_class.constant("ACTION_NAME").id }}",
+            args: action.arguments,
+            failed_message: ex.message
+          )
         end
-
-        @printer.action(
-          state: State::Changed,
-          action: "{{ action_class.constant("ACTION_NAME").id }}",
-          args: action.arguments,
-          result: {} of String => String
-        )
       end
     {% end %}
   end

@@ -51,8 +51,7 @@ module Elite
     # :param action: The action being called.
     # :param args: The arguments sent to the action.
     # :param result: The result of the execution or nil when the task is still running.
-    def action(state : Enum, action : String, args : NamedTuple,
-               result : Hash(String, String))
+    def action(state : Enum, action : String, args : NamedTuple, failed_message : String | Nil = nil)
       # Determine the output colour and state text
       if state == State::Running
         print_colour = ANSI::WHITE
@@ -125,10 +124,10 @@ module Elite
         )
 
         # Display the changed or failure message if necessary
-        if state == State::Failed && result["message"]
+        if state == State::Failed && failed_message
           puts(
             "#{ANSI::BLUE}#{center("", 10)}message:#{ANSI::ENDC} " \
-            "#{ANSI::YELLOW}#{result["message"]}#{ANSI::ENDC}"
+            "#{ANSI::YELLOW}#{failed_message}#{ANSI::ENDC}"
           )
         end
 

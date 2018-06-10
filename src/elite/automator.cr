@@ -37,7 +37,7 @@ module Elite
         begin
           response = action.invoke
           @printer.action(
-            state: response.changed ? State::Changed : State::OK,
+            state: response[:changed] ? State::Changed : State::OK,
             action: "{{ action_class.constant("ACTION_NAME").id }}",
             args: action.arguments
           )

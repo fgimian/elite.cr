@@ -8,7 +8,6 @@ module Elite
   class ActionProcessingError < ActionError
   end
 
-  record ActionResponse, changed : Bool, data = {} of String => String
   record ProcessResponse, exit_code : Int32, output : String, error : String
 
   abstract class Action
@@ -60,16 +59,23 @@ module Elite
           raise ActionArgumentError.new("argument {{ argument_name }} is mandatory")
         end
       {% end %}
-
+      validate_arguments
       process
     end
 
-    def ok(data = {} of String => String)
-      ActionResponse.new(changed: false, data: data)
+    def validate_arguments
     end
 
-    def changed(data = {} of String => String)
-      ActionResponse.new(changed: true, data: data)
+    def process
+      raise NotImplementedError.new("please implement a process method for your action")
+    end
+
+    def ok(**data)
+      {changed: false, data: data}
+    end
+
+    def changed(**data)
+      {changed: true, data: data}
     end
 
     # Runs the #command provided and deals with output and errors.
@@ -95,7 +101,7 @@ module Elite
       # Process the results
       if status.exit_code > 0 && !ignore_fail
         if !fail_error.nil?
-          return ActionError.new(fail_error)
+          raise ActionProcessingError.new(fail_error)
         elsif !error.nil? && error != ""
           # Workaround: Ensure that we handle inexistent executables
           # (see https://github.com/crystal-lang/crystal/issues/3517)
@@ -110,10 +116,6 @@ module Elite
       end
 
       return ProcessResponse.new(status.exit_code, output, error)
-    end
-
-    def process
-      raise NotImplementedError.new("please implement a run method for your action")
     end
   end
 end

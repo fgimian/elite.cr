@@ -9,13 +9,18 @@ module Elite
   end
 
   record ActionResponse, changed : Bool, data = {} of String => String
-  record ProcessResponse, exit_code : Int32, output : String | Nil, error : String | Nil
+  record ProcessResponse, exit_code : Int32, output : String, error : String
 
   abstract class Action
     ACTION_NAME = nil
 
     ARGUMENT_NAMES = [] of String
     MANDATORY_ARGUMENT_NAMES = [] of String
+
+    macro inherited
+      ARGUMENT_NAMES = [] of String
+      MANDATORY_ARGUMENT_NAMES = [] of String
+    end
 
     macro argument(name, choices = [] of Symbol, default = nil, optional = false)
       {% unless choices.empty? || default %}
@@ -24,8 +29,8 @@ module Elite
 
       @{{ name.var }} : {{ name.type }} | Nil = {{ default }}
 
-      {% Action::ARGUMENT_NAMES << name.var %}
-      {% Action::MANDATORY_ARGUMENT_NAMES << name.var unless optional %}
+      {% ARGUMENT_NAMES << name.var.stringify %}
+      {% MANDATORY_ARGUMENT_NAMES << name.var.stringify unless optional %}
 
       def {{ name.var }}(value)
         {% unless choices.empty? %}
@@ -39,14 +44,20 @@ module Elite
       end
     end
 
-    def arguments
-      {% begin %}
-        {
-          {% for argument_name in ARGUMENT_NAMES %}
-            {{ argument_name }}: @{{ argument_name }},
+    macro add_arguments
+      def arguments
+        {% begin %}
+          {% if ARGUMENT_NAMES.empty? %}
+            NamedTuple.new
+          {% else %}
+            {
+              {% for argument_name in ARGUMENT_NAMES %}
+                {{ argument_name.id }}: @{{ argument_name.id }},
+              {% end %}
+            }
           {% end %}
-        }
-      {% end %}
+        {% end %}
+      end
     end
 
     def invoke
@@ -81,8 +92,8 @@ module Elite
       )
 
       # Capture output if required
-      output = capture_output ? process.output.gets_to_end : nil
-      error = capture_error ? process.error.gets_to_end : nil
+      output = capture_output ? process.output.gets_to_end : ""
+      error = capture_error ? process.error.gets_to_end : ""
 
       # Wait for the process to complete
       status = process.wait

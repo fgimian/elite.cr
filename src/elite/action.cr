@@ -26,7 +26,7 @@ module Elite
         {% raise "A default is required when choices is used" %}
       {% end %}
 
-      @{{ name.var }} : {{ name.type }} | Nil = {{ default }}
+      @{{ name.var }} : {{ name.type }}? = {{ default }}
 
       {% ARGUMENT_NAMES << name.var.stringify %}
       {% MANDATORY_ARGUMENT_NAMES << name.var.stringify unless optional %}

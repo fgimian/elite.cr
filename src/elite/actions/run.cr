@@ -22,6 +22,9 @@ module Elite::Actions
         return ok unless File.exists?(removes)
       end
 
+      # Determine the working directory to be used
+      chdir = @working_dir ? File.expand_path(@working_dir.as(String)) : nil
+
       # Check if the optional check command succeeds
       if @except
         except_proc = run(@except.as(Array(String)), ignore_fail: true,
@@ -30,7 +33,6 @@ module Elite::Actions
       end
 
       # Run the given command
-      chdir = @working_dir ? File.expand_path(@working_dir.as(String)) : nil
       proc = run(@command.as(Array(String)), capture_output: true, capture_error: true,
                  shell: @shell.as(Bool), chdir: chdir)
       changed(output: proc.output, error: proc.error, exit_code: proc.exit_code)

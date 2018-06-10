@@ -28,7 +28,7 @@ module Elite::Actions
 
     def process
       # Determine the pip executable
-      executable : String | Nil = nil
+      executable : String? = nil
 
       if @virtualenv
         ["pip", "pip3", "pip2"].each do |pip|

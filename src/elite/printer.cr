@@ -2,7 +2,7 @@ require "unixium"
 
 module Elite
   class Printer
-    @overlap_lines : Int32 | Nil
+    @overlap_lines : Int32?
 
     # Tracks the number of lines we must move upwards to overlap text.
     def initialize
@@ -51,7 +51,7 @@ module Elite
     # :param action: The action being called.
     # :param args: The arguments sent to the action.
     # :param result: The result of the execution or nil when the task is still running.
-    def action(state : Enum, action : String, args : NamedTuple, failed_message : String | Nil = nil)
+    def action(state : Enum, action : String, args : NamedTuple, failed_message : String? = nil)
       # Determine the output colour and state text
       if state == State::Running
         print_colour = ANSI::WHITE

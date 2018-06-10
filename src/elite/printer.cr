@@ -134,6 +134,8 @@ module Elite
         # Reset the number of lines to overlap
         @overlap_lines = nil
       end
+
+      nil
     end
 
     # Displays a final summary after execution of all tasks have completed.

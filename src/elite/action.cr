@@ -80,13 +80,13 @@ module Elite
 
     # Runs the #command provided and deals with output and errors.
     def run(command : Array(String), capture_output = false, capture_error = false,
-            ignore_fail = false, fail_error = nil)
+            ignore_fail = false, fail_error = nil, **options)
       # Ensure that errors are caught regardless if we intend to report errors
       capture_error = capture_error || !ignore_fail && fail_error.nil?
 
       # Run the requested process
       process = Process.new(
-        command.first, args: command[1..-1],
+        command.first, command[1..-1], **options,
         output: capture_output ? Process::Redirect::Pipe : Process::Redirect::Close,
         error: capture_error ? Process::Redirect::Pipe : Process::Redirect::Close
       )

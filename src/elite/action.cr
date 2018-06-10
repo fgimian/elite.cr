@@ -86,7 +86,7 @@ module Elite
 
       # Run the requested process
       process = Process.new(
-        command[0], args: command[1..-1],
+        command.first, args: command[1..-1],
         output: capture_output ? Process::Redirect::Pipe : Process::Redirect::Close,
         error: capture_error ? Process::Redirect::Pipe : Process::Redirect::Close
       )
@@ -106,7 +106,7 @@ module Elite
           # Workaround: Ensure that we handle inexistent executables
           # (see https://github.com/crystal-lang/crystal/issues/3517)
           if status.exit_code == 127
-            error = "No such file or directory: #{command[0]}"
+            error = "No such file or directory: #{command.first}"
           end
 
           raise ActionProcessingError.new(error.rstrip)

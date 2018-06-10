@@ -28,24 +28,27 @@ module Elite::Actions
 
     def process
       # Determine the pip executable
-      executable : String | Nil
+      executable : String | Nil = nil
+
       if @virtualenv
-        # TODO: repair this because executable is not set in the loop
-        if ["pip", "pip3", "pip2"].each do |pip|
-          if File.exists?(File.join([@virtualenv.as(String), "bin", pip]))
-            executable = File.join([@virtualenv.as(String), "bin", pip])
+        ["pip", "pip3", "pip2"].each do |pip|
+          pip_path = File.join([@virtualenv.as(String), "bin", pip])
+          if File.exists?(pip_path)
+            executable = pip_path
             break
           end
-        end.nil?
+        end
+
+        unless executable
           raise ActionProcessingError.new(
             "Unable to find a pip executable in the virtualenv supplied"
           )
         end
       elsif !@executable
-        # TODO: can we do this more eleganntly
-        executable = Process.find_executable("pip")
-        executable = Process.find_executable("pip3") unless executable
-        executable = Process.find_executable("pip2") unless executable
+        ["pip", "pip3", "pip2"].each do |pip|
+          executable = Process.find_executable(pip)
+          break if executable
+        end
 
         unless executable
           raise ActionProcessingError.new("Unable to determine pip executable to use")

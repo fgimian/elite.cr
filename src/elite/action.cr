@@ -46,17 +46,11 @@ module Elite
 
     macro add_arguments
       def arguments
-        {% begin %}
-          {% if ARGUMENT_NAMES.empty? %}
-            NamedTuple.new
-          {% else %}
-            {
-              {% for argument_name in ARGUMENT_NAMES %}
-                {{ argument_name.id }}: @{{ argument_name.id }},
-              {% end %}
-            }
+        NamedTuple.new(
+          {% for argument_name in ARGUMENT_NAMES %}
+            {{ argument_name.id }}: @{{ argument_name.id }},
           {% end %}
-        {% end %}
+        )
       end
     end
 

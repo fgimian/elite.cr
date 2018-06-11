@@ -54,9 +54,9 @@ module Elite
     end
 
     def invoke
-      {% for argument_name in MANDATORY_ARGUMENT_NAMES %}
-        unless @{{ argument_name }}
-          raise ActionArgumentError.new("argument {{ argument_name }} is mandatory")
+      {% for argument_name in @type.constant("MANDATORY_ARGUMENT_NAMES") %}
+        unless @{{ argument_name.id }}
+          raise ActionArgumentError.new("argument {{ argument_name.id }} is mandatory")
         end
       {% end %}
       validate_arguments

@@ -14,7 +14,7 @@ module Elite::Actions
     def validate_arguments
       if @state == "latest" && @version
         raise ActionProcessingError.new(
-          %(you may not request "state" to be "latest" and provide a "version" argument)
+          %(You may not request "state" to be "latest" and provide a "version" argument)
         )
       end
     end
@@ -26,7 +26,7 @@ module Elite::Actions
       unless @executable
         executable = Process.find_executable("gem")
         unless executable
-          raise ActionProcessingError.new("unable to find a gem executable to use")
+          raise ActionProcessingError.new("Unable to find a gem executable to use")
         end
       else
         executable = @executable.as(String)
@@ -61,7 +61,7 @@ module Elite::Actions
             gem_outdated = !gem_versions.includes?(gem_remote_version)
           end
         rescue YAML::ParseException | KeyError
-          raise ActionProcessingError.new("unable to parse installed package listing")
+          raise ActionProcessingError.new("Unable to parse installed package listing")
         end
       end
 

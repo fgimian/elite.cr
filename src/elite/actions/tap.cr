@@ -21,7 +21,7 @@ module Elite::Actions
       unless tap_list_proc.exit_code == 0
         tapped = false
       else
-        tap_list = tap_list_proc.output.rstrip.split("\n")
+        tap_list = tap_list_proc.output.chomp.split("\n")
         tapped = tap_list.includes?(name)
       end
 

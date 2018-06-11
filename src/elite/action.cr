@@ -109,7 +109,7 @@ module Elite
             error = "No such file or directory: #{command.first}"
           end
 
-          raise ActionProcessingError.new(error.rstrip)
+          raise ActionProcessingError.new(error.chomp)
         else
           raise ActionProcessingError.new("Unable to execute command: #{command}")
         end

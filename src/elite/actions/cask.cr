@@ -20,7 +20,7 @@ module Elite::Actions
       unless cask_list_proc.exit_code == 0
         cask_installed = false
       else
-        cask_list = cask_list_proc.output.rstrip.split("\n")
+        cask_list = cask_list_proc.output.chomp.split("\n")
         cask_installed = cask_list.includes?(name_short)
       end
 
@@ -42,7 +42,7 @@ module Elite::Actions
           cask_outdated_proc = run(%w(brew cask outdated),
                                    capture_output: true, ignore_fail: true)
           if cask_outdated_proc.exit_code == 0
-            cask_list = cask_outdated_proc.output.rstrip.split("\n")
+            cask_list = cask_outdated_proc.output.chomp.split("\n")
             cask_outdated = cask_list.includes?(name_short)
           end
 

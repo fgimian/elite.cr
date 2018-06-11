@@ -9,7 +9,7 @@ module Elite::Actions
       brew_update_proc = run(%w(brew update), capture_output: true)
 
       # Determine if any changes were made
-      if brew_update_proc.output.rstrip == "Already up-to-date."
+      if brew_update_proc.output.chomp == "Already up-to-date."
         ok
       else
         changed

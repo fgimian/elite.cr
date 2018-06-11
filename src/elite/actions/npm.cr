@@ -42,14 +42,10 @@ module Elite::Actions
         executable = @executable.as(String)
       end
 
+      # Build options relating to where the package will be installed
       location_options = [] of String
-      if @mode == "global"
-        location_options << "--global"
-      end
-
-      if @path
-        location_options.concat(["--prefix", @path.as(String)])
-      end
+      location_options << "--global" if @mode == "global"
+      location_options.concat(["--prefix", @path.as(String)]) if @path
 
       # We"ll work in lowercase as npm is case insensitive
       name = @name.as(String).downcase

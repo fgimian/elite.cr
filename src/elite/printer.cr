@@ -38,21 +38,14 @@ module Elite
       # Determine the state
       state = response ? response.as(ActionResponse).state : State::Running
 
-      # Determine the output colour and state text
-      case state
-      when State::Running
-        print_colour = ANSI::WHITE
-        print_state = "running"
-      when State::Failed
-        print_colour = ANSI::RED
-        print_state = "failed"
-      when State::Changed
-        print_colour = ANSI::YELLOW
-        print_state = "changed"
-      else
-        print_colour = ANSI::GREEN
-        print_state = "ok"
-      end
+      # Determine the state text and output colour
+      print_state = state.to_s.downcase
+      print_colour = case state
+                     when State::Running then ANSI::WHITE
+                     when State::Failed  then ANSI::RED
+                     when State::Changed then ANSI::YELLOW
+                     else                     ANSI::GREEN # State::OK
+                     end
 
       # Prettify arguments and action for printing
       print_arguments_s = [] of String

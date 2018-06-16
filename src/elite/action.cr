@@ -13,23 +13,22 @@ module Elite
   abstract class Action
     ACTION_NAME = nil
 
-    ARGUMENT_NAMES = [] of String
-    MANDATORY_ARGUMENT_NAMES = [] of String
-
+    # We must define dedicated class constants for all inherited classes or we end up sharing
+    # the abstract class constants which causes issues.
     macro inherited
       ARGUMENT_NAMES = [] of String
       MANDATORY_ARGUMENT_NAMES = [] of String
     end
 
     macro argument(name, choices = [] of Symbol, default = nil, optional = false)
-      {% unless choices.empty? || default != nil %}
+      {% if !choices.empty? && default == nil %}
         {% raise "A default is required when choices is used" %}
       {% end %}
 
-      @{{ name.var }} : {{ name.type }}? = {{ default }}
-
       {% ARGUMENT_NAMES << name.var.stringify %}
       {% MANDATORY_ARGUMENT_NAMES << name.var.stringify if !optional && default == nil %}
+
+      @{{ name.var }} : {{ name.type }}? = {{ default }}
 
       def {{ name.var }}(value)
         {% unless choices.empty? %}
@@ -41,26 +40,6 @@ module Elite
 
         @{{ name.var }} = value
       end
-    end
-
-    macro add_arguments
-      def arguments
-        NamedTuple.new(
-          {% for argument_name in ARGUMENT_NAMES %}
-            {{ argument_name.id }}: @{{ argument_name.id }},
-          {% end %}
-        )
-      end
-    end
-
-    def invoke
-      {% for argument_name in @type.constant("MANDATORY_ARGUMENT_NAMES") %}
-        unless @{{ argument_name.id }}
-          raise ActionArgumentError.new("argument {{ argument_name.id }} is mandatory")
-        end
-      {% end %}
-      validate_arguments
-      process
     end
 
     def validate_arguments
@@ -118,16 +97,29 @@ module Elite
       return ProcessResponse.new(status.exit_code, output, error)
     end
   end
-end
 
-require "./actions/*"
-
-module Elite
-  {% begin %}
+  macro finished
     {% for action_class in Action.subclasses %}
       class {{ action_class.id }}
-        add_arguments
+        def arguments
+          NamedTuple.new(
+            {% for argument_name in action_class.constant("ARGUMENT_NAMES") %}
+              {{ argument_name.id }}: @{{ argument_name.id }},
+            {% end %}
+          )
+        end
+
+        def invoke
+          {% for argument_name in action_class.constant("MANDATORY_ARGUMENT_NAMES") %}
+            if @{{ argument_name.id }}.nil?
+              raise ActionArgumentError.new("argument {{ argument_name.id }} is mandatory")
+            end
+          {% end %}
+
+          validate_arguments
+          process
+        end
       end
     {% end %}
-  {% end %}
+  end
 end

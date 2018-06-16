@@ -22,7 +22,7 @@ module Elite
 
   class ActionError < Exception
     def response
-      {state: State::Failed, data: ErrorData.new(message: @message)}
+      ActionResponse.new(state: State::Failed, data: ErrorData.new(message: @message))
     end
   end
 
@@ -75,11 +75,11 @@ module Elite
     end
 
     def ok(data = nil)
-      {state: State::OK, data: data}
+      ActionResponse.new(state: State::OK, data: data)
     end
 
     def changed(data = nil)
-      {state: State::Changed, data: data}
+      ActionResponse.new(state: State::Changed, data: data)
     end
 
     # Runs the #command provided and deals with output and errors.

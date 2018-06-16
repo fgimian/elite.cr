@@ -1,7 +1,12 @@
 module Elite
+  alias ActionDetails = {name: String, action: Action, response: ActionResponse}
+
   class Automator
     def initialize
       @printer = Printer.new
+      @ok_actions = [] of ActionDetails
+      @changed_actions = [] of ActionDetails
+      @failed_actions = [] of ActionDetails
     end
 
     def header
@@ -9,7 +14,7 @@ module Elite
     end
 
     def footer
-      @printer.group "Summary"
+      @printer.summary(@ok_actions, @changed_actions, @failed_actions)
       @printer.footer
     end
 
@@ -28,27 +33,30 @@ module Elite
         action = {{ action_class }}.new
         with action yield
 
-        @printer.action(
-          state: State::Running,
-          action: "{{ action_class.constant("ACTION_NAME").id }}",
-          args: action.arguments
-        )
+        @printer.action(name: "{{ action_class.constant("ACTION_NAME").id }}",
+                        action: action,
+                        response: nil)
 
         begin
           response = action.invoke
-          @printer.action(
-            state: response[:state],
-            action: "{{ action_class.constant("ACTION_NAME").id }}",
-            args: action.arguments
-          )
+          action_info = {name: "{{ action_class.constant("ACTION_NAME").id }}",
+                         action: action,
+                         response: response}
+          @printer.action(**action_info)
+
+          if response.state == State::Changed
+            @changed_actions << action_info
+          else
+            @ok_actions << action_info
+          end
           response
         rescue ex : ActionError
-          @printer.action(
-            state: State::Failed,
-            action: "{{ action_class.constant("ACTION_NAME").id }}",
-            args: action.arguments,
-            failed_message: ex.message
-          )
+          action_info = {name: "{{ action_class.constant("ACTION_NAME").id }}",
+                         action: action,
+                         response: ex.response}
+          @printer.action(**action_info)
+
+          @failed_actions << action_info
           ex.response
         end
       end

@@ -25,7 +25,7 @@ module Elite
       puts "#{ANSI::BOLD}#{ANSI::UNDERLINE}#{name}#{ANSI::ENDC}"
     end
 
-    # Prints task information within a section using the *name* provided.  This should be
+    # Prints task information within a group using the *name* provided.  This should be
     # followed by a call to #action.
     def task(name : String)
       puts
@@ -33,13 +33,11 @@ module Elite
       puts
     end
 
-    # Displays a particular task along with the related message upon failure.
-    #
-    # :param state: The state of the task which is an enum of type EliteStatus.
-    # :param action: The action being called.
-    # :param args: The arguments sent to the action.
-    # :param result: The result of the execution or nil when the task is still running.
-    def action(state : Enum, action : String, args : NamedTuple, failed_message : String? = nil)
+    # Displays a particular action along with the related message upon failure.
+    def action(name : String, action : Action, response : ActionResponse | Nil)
+      # Determine the state
+      state = response ? response.as(ActionResponse).state : State::Running
+
       # Determine the output colour and state text
       case state
       when State::Running
@@ -57,14 +55,14 @@ module Elite
       end
 
       # Prettify arguments and action for printing
-      print_args_strs = [] of String
-      args.each do |key, value|
+      print_arguments_s = [] of String
+      action.arguments.each do |key, value|
         next unless value
-        print_args_strs << "#{key}=#{value.inspect}"
+        print_arguments_s << "#{key}=#{value.inspect}"
       end
 
-      print_args = print_args_strs.any? ? print_args_strs.join(" ") : ""
-      print_action = print_args.empty? ? action : "#{action}: "
+      print_arguments = print_arguments_s.any? ? print_arguments_s.join(" ") : ""
+      print_action = print_arguments.empty? ? name : "#{name}: "
 
       # Determine the max characters we can print
       if state == State::Running
@@ -77,7 +75,7 @@ module Elite
         [
           {print_colour, Utils.center(print_state, 10)},
           {ANSI::BLUE, print_action},
-          {ANSI::YELLOW, print_args}
+          {ANSI::YELLOW, print_arguments}
         ].each do |colour, text|
           print_chars += text.size
 
@@ -109,14 +107,15 @@ module Elite
         puts(
           "#{print_colour}#{Utils.center(print_state, 10)}#{ANSI::ENDC}" \
           "#{ANSI::BLUE}#{print_action}#{ANSI::ENDC}" \
-          "#{ANSI::YELLOW}#{print_args}#{ANSI::ENDC}"
+          "#{ANSI::YELLOW}#{print_arguments}#{ANSI::ENDC}"
         )
 
-        # Display the changed or failure message if necessary
-        if state == State::Failed && failed_message
+        # Display the failure message if necessary
+        if state == State::Failed && response
+          message = response.as(ActionResponse).data.as(ErrorData).message
           puts(
             "#{ANSI::BLUE}#{Utils.center("", 10)}message:#{ANSI::ENDC} " \
-            "#{ANSI::YELLOW}#{failed_message}#{ANSI::ENDC}"
+            "#{ANSI::YELLOW}#{message}#{ANSI::ENDC}"
           )
         end
 
@@ -127,38 +126,29 @@ module Elite
       nil
     end
 
-    # Displays a final summary after execution of all tasks have completed.
-    #
-    # :param ok_tasks: A list of tuples containing information relating on successful tasks.
-    # :param changed_tasks: A list of tuples containing information relating on each
-    #             changes made.
-    # :param failed_tasks: A list of tuples containing information relating to each failed task.
-    def summary(ok_tasks : Array(Tuple), changed_tasks : Array(Tuple), failed_tasks : Array(Tuple))
+    # Displays a final summary after execution of all actions have completed.
+    def summary(ok_actions : Array(ActionDetails), changed_actions : Array(ActionDetails), failed_actions : Array(ActionDetails))
       group "Summary"
 
-      # Display any tasks that caused changes.
-      if changed_tasks
-        task "Changed task info:"
-        changed_tasks.each do |action, args, result|
-          action State::Changed, action, args, result
-        end
+      # Display any actions that caused changes.
+      task "Changed"
+      changed_actions.each do |changed_action|
+        action(**changed_action)
       end
 
-      # Display any failed tasks.
-      if failed_tasks
-        task "Failed task info:"
-        failed_tasks.each do |action, args, result|
-          action State::Failed, action, args, result
-        end
+      # Display any failed actions.
+      task "Failed"
+      failed_actions.each do |failed_action|
+        action(**failed_action)
       end
 
       # Display all totals
-      total_tasks = ok_tasks.size + changed_tasks.size + failed_tasks.size
-      task "Totals:"
-      printf "%s%4d\n", "#{ANSI::GREEN}#{Utils.center("ok", 10)}#{ANSI::ENDC}", ok_tasks.size
-      printf "%s%4d\n", "#{ANSI::YELLOW}#{Utils.center("changed", 10)}#{ANSI::ENDC}", changed_tasks.size
-      printf "%s%4d\n", "#{ANSI::RED}#{Utils.center("failed", 10)}#{ANSI::ENDC}", failed_tasks.size
-      printf "%s%4d\n", Utils.center("total", 10), total_tasks
+      total_actions = ok_actions.size + changed_actions.size + failed_actions.size
+      task "Totals"
+      printf "%s%4d\n", "#{ANSI::GREEN}#{Utils.center("ok", 10)}#{ANSI::ENDC}", ok_actions.size
+      printf "%s%4d\n", "#{ANSI::YELLOW}#{Utils.center("changed", 10)}#{ANSI::ENDC}", changed_actions.size
+      printf "%s%4d\n", "#{ANSI::RED}#{Utils.center("failed", 10)}#{ANSI::ENDC}", failed_actions.size
+      printf "%s%4d\n", Utils.center("total", 10), total_actions
     end
   end
 end

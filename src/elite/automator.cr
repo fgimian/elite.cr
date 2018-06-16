@@ -1,5 +1,5 @@
 module Elite
-  alias ActionDetails = {name: String, action: Action, response: ActionResponse}
+  alias ActionDetails = {action: Action, response: ActionResponse}
 
   class Automator
     def initialize
@@ -33,27 +33,22 @@ module Elite
         action = {{ action_class }}.new
         with action yield
 
-        @printer.action(name: "{{ action_class.constant("ACTION_NAME").id }}",
-                        action: action,
-                        response: nil)
-
         begin
+          @printer.action(action: action, response: nil)
           response = action.invoke
-          action_info = {name: "{{ action_class.constant("ACTION_NAME").id }}",
-                         action: action,
-                         response: response}
-          @printer.action(**action_info)
+          action_info = {action: action, response: response}
 
+          @printer.action(**action_info)
           if response.state == State::Changed
             @changed_actions << action_info
           else
             @ok_actions << action_info
           end
+
           response
         rescue ex : ActionError
-          action_info = {name: "{{ action_class.constant("ACTION_NAME").id }}",
-                         action: action,
-                         response: ex.response}
+          action_info = {action: action, response: ex.response}
+
           @printer.action(**action_info)
 
           @failed_actions << action_info

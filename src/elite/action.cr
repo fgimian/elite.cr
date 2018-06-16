@@ -38,11 +38,16 @@ module Elite
   abstract class Action
     ACTION_NAME = nil
 
-    # We must define dedicated class constants for all inherited classes or we end up sharing
-    # the abstract class constants which causes issues.
     macro inherited
+      # We must define dedicated class constants for all inherited classes or we end up sharing
+      # the abstract class constants which causes issues.
       ARGUMENT_NAMES = [] of String
       MANDATORY_ARGUMENT_NAMES = [] of String
+
+      # Expose the action name constant so that it is retrievable in instances
+      def action_name
+        ACTION_NAME
+      end
     end
 
     macro argument(name, choices = [] of Symbol, default = nil, optional = false)

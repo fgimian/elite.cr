@@ -34,7 +34,7 @@ module Elite
     end
 
     # Displays a particular action along with the related message upon failure.
-    def action(name : String, action : Action, response : ActionResponse | Nil)
+    def action(action : Action, response : ActionResponse | Nil)
       # Determine the state
       state = response ? response.as(ActionResponse).state : State::Running
 
@@ -62,7 +62,7 @@ module Elite
       end
 
       print_arguments = print_arguments_s.any? ? print_arguments_s.join(" ") : ""
-      print_action = print_arguments.empty? ? name : "#{name}: "
+      print_action = print_arguments.empty? ? action.action_name : "#{action.action_name}: "
 
       # Determine the max characters we can print
       if state == State::Running

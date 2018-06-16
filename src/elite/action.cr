@@ -1,5 +1,8 @@
 module Elite
   class ActionError < Exception
+    def response
+      {state: State::Failed, data: {:message => @message}}
+    end
   end
 
   class ActionArgumentError < ActionError
@@ -49,12 +52,24 @@ module Elite
       raise NotImplementedError.new("please implement a process method for your action")
     end
 
-    def ok(**data)
-      {changed: false, data: data}
+    macro ok(**data)
+      {% if data.empty? %}
+        %data = {} of Symbol => String
+      {% else %}
+        %data = {{ data }}.to_h
+      {% end %}
+
+      {state: State::OK, data: %data}
     end
 
-    def changed(**data)
-      {changed: true, data: data}
+    macro changed(**data)
+      {% if data.empty? %}
+        %data = {} of Symbol => String
+      {% else %}
+        %data = {{ data }}.to_h
+      {% end %}
+
+      {state: State::Changed, data: %data}
     end
 
     # Runs the #command provided and deals with output and errors.

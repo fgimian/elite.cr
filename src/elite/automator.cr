@@ -37,10 +37,11 @@ module Elite
         begin
           response = action.invoke
           @printer.action(
-            state: response[:changed] ? State::Changed : State::OK,
+            state: response[:state],
             action: "{{ action_class.constant("ACTION_NAME").id }}",
             args: action.arguments
           )
+          response
         rescue ex : ActionError
           @printer.action(
             state: State::Failed,
@@ -48,6 +49,7 @@ module Elite
             args: action.arguments,
             failed_message: ex.message
           )
+          ex.response
         end
       end
     {% end %}

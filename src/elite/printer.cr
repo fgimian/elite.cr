@@ -33,14 +33,6 @@ module Elite
       puts
     end
 
-    # TODO: is there a better way to do this?
-    private def center(text : String, width : Int)
-      padding = (width.to_f - text.size) / 2
-      left_padding = padding.floor.to_i
-      right_padding = padding.ceil.to_i
-      " " * left_padding + text + " " * right_padding
-    end
-
     # Displays a particular task along with the related message upon failure.
     #
     # :param state: The state of the task which is an enum of type EliteStatus.
@@ -83,7 +75,7 @@ module Elite
         print_chars = 0
 
         [
-          {print_colour, center(print_state, 10)},
+          {print_colour, Utils.center(print_state, 10)},
           {ANSI::BLUE, print_action},
           {ANSI::YELLOW, print_args}
         ].each do |colour, text|
@@ -115,7 +107,7 @@ module Elite
         end
 
         puts(
-          "#{print_colour}#{center(print_state, 10)}#{ANSI::ENDC}" \
+          "#{print_colour}#{Utils.center(print_state, 10)}#{ANSI::ENDC}" \
           "#{ANSI::BLUE}#{print_action}#{ANSI::ENDC}" \
           "#{ANSI::YELLOW}#{print_args}#{ANSI::ENDC}"
         )
@@ -123,7 +115,7 @@ module Elite
         # Display the changed or failure message if necessary
         if state == State::Failed && failed_message
           puts(
-            "#{ANSI::BLUE}#{center("", 10)}message:#{ANSI::ENDC} " \
+            "#{ANSI::BLUE}#{Utils.center("", 10)}message:#{ANSI::ENDC} " \
             "#{ANSI::YELLOW}#{failed_message}#{ANSI::ENDC}"
           )
         end
@@ -163,10 +155,10 @@ module Elite
       # Display all totals
       total_tasks = ok_tasks.size + changed_tasks.size + failed_tasks.size
       task "Totals:"
-      printf "%s%4d\n", "#{ANSI::GREEN}#{center("ok", 10)}#{ANSI::ENDC}", ok_tasks.size
-      printf "%s%4d\n", "#{ANSI::YELLOW}#{center("changed", 10)}#{ANSI::ENDC}", changed_tasks.size
-      printf "%s%4d\n", "#{ANSI::RED}#{center("failed", 10)}#{ANSI::ENDC}", failed_tasks.size
-      printf "%s%4d\n", center("total", 10), total_tasks
+      printf "%s%4d\n", "#{ANSI::GREEN}#{Utils.center("ok", 10)}#{ANSI::ENDC}", ok_tasks.size
+      printf "%s%4d\n", "#{ANSI::YELLOW}#{Utils.center("changed", 10)}#{ANSI::ENDC}", changed_tasks.size
+      printf "%s%4d\n", "#{ANSI::RED}#{Utils.center("failed", 10)}#{ANSI::ENDC}", failed_tasks.size
+      printf "%s%4d\n", Utils.center("total", 10), total_tasks
     end
   end
 end

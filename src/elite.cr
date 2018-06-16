@@ -7,6 +7,7 @@ require "./elite/automator"
 require "./elite/ansi"
 require "./elite/printer"
 require "./elite/state"
+require "./elite/utils"
 require "./elite/version"
 
 # TODO: Write documentation for `Elite`

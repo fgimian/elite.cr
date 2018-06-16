@@ -1,4 +1,6 @@
 module Elite::Actions
+  Elite.data RunData, output : String, error : String, exit_code : Int32
+
   class Run < Action
     ACTION_NAME = "run"
 
@@ -34,7 +36,7 @@ module Elite::Actions
       # Run the given command
       proc = run(@command.as(Array(String)), capture_output: true, capture_error: true,
                  shell: @shell.as(Bool), chdir: chdir)
-      changed(output: proc.output, error: proc.error, exit_code: proc.exit_code)
+      changed(RunData.new(output: proc.output, error: proc.error, exit_code: proc.exit_code))
     end
   end
 end

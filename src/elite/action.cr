@@ -1,7 +1,28 @@
 module Elite
+  abstract struct ActionData
+  end
+
+  macro data(name, *properties)
+    struct {{name.id}} < ActionData
+      {% for property in properties %}
+        getter {{property.var}} : {{property.type}}
+      {% end %}
+
+      def initialize({{
+                       *properties.map do |field|
+                         "@#{field.id}".id
+                       end
+                     }})
+      end
+    end
+  end
+
+  # Error messages may also be Nil as the base Exception class allows this
+  data ErrorData, message : String | Nil
+
   class ActionError < Exception
     def response
-      {state: State::Failed, data: {:message => @message}}
+      {state: State::Failed, data: ErrorData.new(message: @message)}
     end
   end
 
@@ -11,6 +32,7 @@ module Elite
   class ActionProcessingError < ActionError
   end
 
+  record ActionResponse, state : State, data : ActionData | Nil
   record ProcessResponse, exit_code : Int32, output : String, error : String
 
   abstract class Action
@@ -52,24 +74,12 @@ module Elite
       raise NotImplementedError.new("please implement a process method for your action")
     end
 
-    macro ok(**data)
-      {% if data.empty? %}
-        %data = {} of Symbol => String
-      {% else %}
-        %data = {{ data }}.to_h
-      {% end %}
-
-      {state: State::OK, data: %data}
+    def ok(data = nil)
+      {state: State::OK, data: data}
     end
 
-    macro changed(**data)
-      {% if data.empty? %}
-        %data = {} of Symbol => String
-      {% else %}
-        %data = {{ data }}.to_h
-      {% end %}
-
-      {state: State::Changed, data: %data}
+    def changed(data = nil)
+      {state: State::Changed, data: data}
     end
 
     # Runs the #command provided and deals with output and errors.

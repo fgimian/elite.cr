@@ -116,7 +116,7 @@ module Elite::Actions
         elsif npm_installed && npm_outdated
           run([executable, "install"] + location_options + options_a + [name],
               fail_error: "unable to upgrade the requested package")
-          changed(message: "existing outdated package found and upgraded successfully")
+          changed
         else
           run([executable, "install"] + location_options + options_a + [name],
               fail_error: "unable to install the requested package")

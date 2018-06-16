@@ -1,6 +1,8 @@
 require "json"
 
 module Elite::Actions
+  Elite.data RsyncData, changes : Array({operation: String, filename: String})
+
   class Rsync < Action
     ACTION_NAME = "rsync"
 
@@ -59,7 +61,7 @@ module Elite::Actions
       end
 
       # Changes were found and must be reported to the user
-      changed(changes: changes)
+      changed(RsyncData.new(changes: changes))
     end
   end
 end

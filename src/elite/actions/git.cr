@@ -5,7 +5,6 @@ module Elite::Actions
     argument repo : String
     argument path : String
     argument branch : String, optional: true
-    add_arguments
 
     def process
       # Ensure that home directories are taken into account

@@ -5,7 +5,6 @@ module Elite::Actions
     argument name : String
     argument state : String, choices: ["present", "latest", "absent"], default: "present"
     argument options : Array(String), optional: true
-    add_arguments
 
     def process
       name = @name.as(String)

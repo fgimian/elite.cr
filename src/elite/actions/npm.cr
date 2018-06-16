@@ -9,7 +9,6 @@ module Elite::Actions
     argument mode : String, choices: ["local", "global"], default: "global"
     argument executable : String, optional: true
     argument options : Array(String), optional: true
-    add_arguments
 
     def validate_arguments
       if @mode == "global" && @path

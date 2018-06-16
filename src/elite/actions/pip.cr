@@ -10,7 +10,6 @@ module Elite::Actions
     argument executable : String, optional: true
     argument virtualenv : String, optional: true
     argument options : Array(String), optional: true
-    add_arguments
 
     def validate_arguments
       if @virtualenv && @executable

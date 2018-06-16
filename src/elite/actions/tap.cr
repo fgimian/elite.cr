@@ -5,7 +5,6 @@ module Elite::Actions
     argument name : String
     argument state : String, choices: ["present", "absent"], default: "present"
     argument url : String, optional: true
-    add_arguments
 
     def process
       # We"ll work in lowercase as brew is case insensitive

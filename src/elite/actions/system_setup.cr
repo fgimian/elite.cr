@@ -5,7 +5,6 @@ module Elite::Actions
     argument timezone : String, optional: true
     argument computer_sleep_time : String, optional: true
     argument display_sleep_time : String, optional: true
-    add_arguments
 
     def process
       changes_made = false

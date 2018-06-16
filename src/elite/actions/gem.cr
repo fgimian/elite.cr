@@ -9,7 +9,6 @@ module Elite::Actions
     argument state : String, choices: ["present", "latest", "absent"], default: "present"
     argument executable : String, optional: true
     argument options : Array(String), optional: true
-    add_arguments
 
     def validate_arguments
       if @state == "latest" && @version

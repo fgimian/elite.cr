@@ -9,7 +9,6 @@ module Elite::Actions
     argument executable : String, optional: true
     argument archive : Bool, default: true
     argument options : Array(String), optional: true
-    add_arguments
 
     def process
       # Ensure that home directories are taken into account

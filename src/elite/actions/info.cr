@@ -3,7 +3,6 @@ module Elite::Actions
     ACTION_NAME = "info"
 
     argument message : String
-    add_arguments
 
     def process
       ok

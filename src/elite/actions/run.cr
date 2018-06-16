@@ -8,7 +8,6 @@ module Elite::Actions
     argument except : Array(String), optional: true
     argument creates : String, optional: true
     argument removes : String, optional: true
-    add_arguments
 
     def process
       # Check if the created or removed file is already present

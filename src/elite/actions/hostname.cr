@@ -4,7 +4,6 @@ module Elite::Actions
 
     argument local_host_name : String, optional: true
     argument computer_name : String, optional: true
-    add_arguments
 
     def process
       changes_made = false

@@ -121,3 +121,13 @@ module Elite
 end
 
 require "./actions/*"
+
+module Elite
+  {% begin %}
+    {% for action_class in Action.subclasses %}
+      class {{ action_class.id }}
+        add_arguments
+      end
+    {% end %}
+  {% end %}
+end

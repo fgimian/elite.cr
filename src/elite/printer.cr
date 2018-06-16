@@ -127,27 +127,28 @@ module Elite
     end
 
     # Displays a final summary after execution of all actions have completed.
-    def summary(ok_actions : Array(ActionDetails), changed_actions : Array(ActionDetails), failed_actions : Array(ActionDetails))
+    def summary(actions_ok : Array(ActionDetails), actions_changed : Array(ActionDetails),
+                actions_failed : Array(ActionDetails))
       group "Summary"
 
       # Display any actions that caused changes.
       task "Changed"
-      changed_actions.each do |changed_action|
+      actions_changed.each do |changed_action|
         action(**changed_action)
       end
 
       # Display any failed actions.
       task "Failed"
-      failed_actions.each do |failed_action|
+      actions_failed.each do |failed_action|
         action(**failed_action)
       end
 
       # Display all totals
-      total_actions = ok_actions.size + changed_actions.size + failed_actions.size
+      total_actions = actions_ok.size + actions_changed.size + actions_failed.size
       task "Totals"
-      printf "%s%4d\n", "#{ANSI::GREEN}#{Utils.center("ok", 10)}#{ANSI::ENDC}", ok_actions.size
-      printf "%s%4d\n", "#{ANSI::YELLOW}#{Utils.center("changed", 10)}#{ANSI::ENDC}", changed_actions.size
-      printf "%s%4d\n", "#{ANSI::RED}#{Utils.center("failed", 10)}#{ANSI::ENDC}", failed_actions.size
+      printf "%s%4d\n", "#{ANSI::GREEN}#{Utils.center("ok", 10)}#{ANSI::ENDC}", actions_ok.size
+      printf "%s%4d\n", "#{ANSI::YELLOW}#{Utils.center("changed", 10)}#{ANSI::ENDC}", actions_changed.size
+      printf "%s%4d\n", "#{ANSI::RED}#{Utils.center("failed", 10)}#{ANSI::ENDC}", actions_failed.size
       printf "%s%4d\n", Utils.center("total", 10), total_actions
     end
   end

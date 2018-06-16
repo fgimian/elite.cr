@@ -4,9 +4,9 @@ module Elite
   class Automator
     def initialize
       @printer = Printer.new
-      @ok_actions = [] of ActionDetails
-      @changed_actions = [] of ActionDetails
-      @failed_actions = [] of ActionDetails
+      @actions_ok = [] of ActionDetails
+      @actions_changed = [] of ActionDetails
+      @actions_failed = [] of ActionDetails
     end
 
     def header
@@ -14,7 +14,7 @@ module Elite
     end
 
     def footer
-      @printer.summary(@ok_actions, @changed_actions, @failed_actions)
+      @printer.summary(@actions_ok, @actions_changed, @actions_failed)
       @printer.footer
     end
 
@@ -40,9 +40,9 @@ module Elite
 
           @printer.action(**action_info)
           if response.state == State::Changed
-            @changed_actions << action_info
+            @actions_changed << action_info
           else
-            @ok_actions << action_info
+            @actions_ok << action_info
           end
 
           response
@@ -50,8 +50,8 @@ module Elite
           action_info = {action: action, response: ex.response}
 
           @printer.action(**action_info)
+          @actions_failed << action_info
 
-          @failed_actions << action_info
           ex.response
         end
       end

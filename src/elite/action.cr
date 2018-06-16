@@ -22,14 +22,14 @@ module Elite
     end
 
     macro argument(name, choices = [] of Symbol, default = nil, optional = false)
-      {% unless choices.empty? || default %}
+      {% unless choices.empty? || default != nil %}
         {% raise "A default is required when choices is used" %}
       {% end %}
 
       @{{ name.var }} : {{ name.type }}? = {{ default }}
 
       {% ARGUMENT_NAMES << name.var.stringify %}
-      {% MANDATORY_ARGUMENT_NAMES << name.var.stringify unless optional %}
+      {% MANDATORY_ARGUMENT_NAMES << name.var.stringify if !optional && default == nil %}
 
       def {{ name.var }}(value)
         {% unless choices.empty? %}
@@ -82,7 +82,7 @@ module Elite
     def run(command : Array(String), capture_output = false, capture_error = false,
             ignore_fail = false, fail_error = nil, **options)
       # Ensure that errors are caught regardless if we intend to report errors
-      capture_error = capture_error || !ignore_fail && fail_error.nil?
+      capture_error = capture_error || !ignore_fail && !fail_error
 
       # Run the requested process
       process = Process.new(
@@ -100,9 +100,9 @@ module Elite
 
       # Process the results
       if status.exit_code > 0 && !ignore_fail
-        if !fail_error.nil?
+        if fail_error
           raise ActionProcessingError.new(fail_error)
-        elsif !error.nil? && error != ""
+        elsif error && error != ""
           # Workaround: Ensure that we handle inexistent executables
           # (see https://github.com/crystal-lang/crystal/issues/3517)
           if status.exit_code == 127

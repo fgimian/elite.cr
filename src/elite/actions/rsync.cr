@@ -30,7 +30,7 @@ module Elite::Actions
       options_a << "--archive" if @archive
 
       # Add any additional user provided options
-      options_a.concat(@options.nil? ? [] of String : @options.as(Array(String)))
+      options_a.concat(@options ? @options.as(Array(String)) : [] of String)
 
       # The output we want from rsync is a series of JSON hashes containing the operation
       # nd filename of each affected file

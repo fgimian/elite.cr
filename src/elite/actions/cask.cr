@@ -9,7 +9,7 @@ module Elite::Actions
     def process
       name = @name.as(String)
       name_short = name.split("/")[-1]
-      options_a = @options.nil? ? [] of String : @options.as(Array(String))
+      options_a = @options ? @options.as(Array(String)) : [] of String
 
       # Obtain information about installed packages
       cask_list_proc = run(%w(brew cask list), capture_output: true, ignore_fail: true)

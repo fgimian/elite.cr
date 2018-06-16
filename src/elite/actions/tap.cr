@@ -11,7 +11,7 @@ module Elite::Actions
       name = @name.as(String).downcase
 
       # Prepare the URL if provided options
-      url_a = @url.nil? ? [] of String : [@url.as(String)]
+      url_a = @url ? [@url.as(String)] : [] of String
 
       # Obtain information about installed taps
       tap_list_proc = run(%w(brew tap), capture_output: true, ignore_fail: true)

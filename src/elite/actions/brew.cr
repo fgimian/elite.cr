@@ -11,7 +11,7 @@ module Elite::Actions
     def process
       # We"ll work in lowercase as brew is case insensitive
       name = @name.as(String).downcase
-      options_a = @options.nil? ? [] of String : @options.as(Array(String))
+      options_a = @options ? @options.as(Array(String)) : [] of String
 
       # Obtain information about the requested package
       brew_info_proc = run(["brew", "info", "--json=v1", name],

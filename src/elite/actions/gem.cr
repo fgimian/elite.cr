@@ -65,7 +65,7 @@ module Elite::Actions
       end
 
       # Prepare any user provided options
-      options_a = @options.nil? ? [] of String : @options.as(Array(String))
+      options_a = @options ? @options.as(Array(String)) : [] of String
 
       # Install, upgrade or remove the package as requested
       case @state

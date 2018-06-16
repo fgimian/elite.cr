@@ -2,12 +2,8 @@ require "unixium"
 
 module Elite
   class Printer
-    @overlap_lines : Int32?
-
     # Tracks the number of lines we must move upwards to overlap text.
-    def initialize
-      @overlap_lines = nil
-    end
+    @overlap_lines : Int32? = nil
 
     # Prints the master header which hides the cursor.
     def header
@@ -53,13 +49,14 @@ module Elite
     # :param result: The result of the execution or nil when the task is still running.
     def action(state : Enum, action : String, args : NamedTuple, failed_message : String? = nil)
       # Determine the output colour and state text
-      if state == State::Running
+      case state
+      when State::Running
         print_colour = ANSI::WHITE
         print_state = "running"
-      elsif state == State::Failed
+      when State::Failed
         print_colour = ANSI::RED
         print_state = "failed"
-      elsif state == State::Changed
+      when State::Changed
         print_colour = ANSI::YELLOW
         print_state = "changed"
       else

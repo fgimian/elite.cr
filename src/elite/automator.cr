@@ -58,6 +58,11 @@ module Elite
         @actions[response.state] << action_details
         response
       end
+
+      # Provide an overload when no block is needed (in the case that an action has no arguments)
+      def {{ action_class.constant("ACTION_NAME").id }}
+        {{ action_class.constant("ACTION_NAME").id }} {}
+      end
     {% end %}
   end
 end

@@ -4,9 +4,9 @@ module Elite
   class Automator
     def initialize
       @printer = Printer.new
-      @actions_ok = [] of ActionDetails
-      @actions_changed = [] of ActionDetails
-      @actions_failed = [] of ActionDetails
+      @actions = Hash(State, Array(ActionDetails)).new do |hash, key|
+        hash[key] = [] of ActionDetails
+      end
     end
 
     def header
@@ -17,22 +17,15 @@ module Elite
       @printer.interrupt if interrupt
 
       @printer.group "Summary"
-      [
-        {"Changed", @actions_changed},
-        {"Failed", @actions_failed}
-      ].each do |type, actions|
-        @printer.task type
-        actions.each { |action| @printer.action(**action) }
+      [State::Changed, State::Failed].each do |state|
+        @printer.task state.to_s
+        @actions[state].each { |action| @printer.action(**action) }
       end
 
-      total_actions = @actions_ok.size + @actions_changed.size + @actions_failed.size
+      total_actions = @actions.map { |state, actions| actions.size }.sum
       @printer.task "Totals"
-      [
-        {@actions_ok.size, State::OK},
-        {@actions_changed.size, State::Changed},
-        {@actions_failed.size, State::Failed},
-        {total_actions, nil}
-      ].each do |number, state|
+      [State::OK, State::Changed, State::Failed, nil].each do |state|
+        number = state ? @actions[state].size : total_actions
         @printer.total number, state
       end
 
@@ -57,24 +50,14 @@ module Elite
         begin
           @printer.action(action: action, response: nil)
           response = action.invoke
-          action_info = {action: action, response: response}
-
-          @printer.action(**action_info)
-          if response.state == State::Changed
-            @actions_changed << action_info
-          else
-            @actions_ok << action_info
-          end
-
-          response
         rescue ex : ActionError
-          action_info = {action: action, response: ex.response}
-
-          @printer.action(**action_info)
-          @actions_failed << action_info
-
-          ex.response
+          response = ex.response
         end
+
+        action_details = ActionDetails.new(action: action, response: response)
+        @printer.action(**action_details)
+        @actions[response.state] << action_details
+        response
       end
     {% end %}
   end

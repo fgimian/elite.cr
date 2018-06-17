@@ -18,6 +18,7 @@ module Elite
 
       @printer.group "Summary"
       [State::Changed, State::Failed].each do |state|
+        next if @actions[state].empty?
         @printer.task state.to_s
         @actions[state].each { |action| @printer.action(**action) }
       end
@@ -56,6 +57,8 @@ module Elite
         action_details = ActionDetails.new(action: action, response: response)
         @printer.action(**action_details)
         @actions[response.state] << action_details
+
+        raise ex if ex
         response
       end
 

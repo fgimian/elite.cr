@@ -24,6 +24,11 @@ def elite
   end
 
   automator.header
-  with automator yield
-  automator.footer
+  begin
+    with automator yield
+  rescue Elite::ActionError
+    # Nothing to do here, just catch the error gracefully
+  ensure
+    automator.footer
+  end
 end

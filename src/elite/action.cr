@@ -18,7 +18,7 @@ module Elite
   end
 
   # Error messages may also be Nil as the base Exception class allows this
-  data ErrorData, message : String | Nil
+  data ErrorData, message : String?
 
   class ActionError < Exception
     def response
@@ -32,7 +32,7 @@ module Elite
   class ActionProcessingError < ActionError
   end
 
-  record ActionResponse, state : State, data : ActionData | Nil
+  record ActionResponse, state : State, data : ActionData?
   record ProcessResponse, exit_code : Int32, output : String, error : String
 
   abstract class Action

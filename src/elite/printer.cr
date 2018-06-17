@@ -45,7 +45,7 @@ module Elite
     end
 
     # Displays a particular action along with the related message upon failure.
-    def action(action : Action, response : ActionResponse | Nil)
+    def action(action : Action, response : ActionResponse?)
       # Determine the state
       state = response ? response.as(ActionResponse).state : State::Running
 
@@ -130,7 +130,7 @@ module Elite
       puts
     end
 
-    def total(number : Int32, state : State | Nil = nil)
+    def total(number : Int32, state : State? = nil)
       print_state = state ? state.to_s.downcase : "total"
       print_colour = state_colour(state)
 

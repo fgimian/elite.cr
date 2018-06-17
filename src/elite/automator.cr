@@ -2,7 +2,7 @@ module Elite
   alias ActionDetails = {action: Action, response: ActionResponse}
 
   class Automator
-    @current_options : NamedTuple(changed: Bool | Nil, continue_on_failure: Bool) | Nil
+    @current_options : NamedTuple(changed: Bool?, continue_on_failure: Bool)?
 
     def initialize
       @printer = Printer.new
@@ -45,7 +45,7 @@ module Elite
       with self yield
     end
 
-    def options(sudo = false, changed : Bool | Nil = nil, continue_on_failure = false,
+    def options(sudo = false, changed : Bool? = nil, continue_on_failure = false,
                 environment = {} of String => String)
       # TODO: Implement sudo capabilities
 

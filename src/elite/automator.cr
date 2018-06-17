@@ -14,7 +14,28 @@ module Elite
     end
 
     def footer(interrupt = false)
-      @printer.summary(@actions_ok, @actions_changed, @actions_failed, interrupt)
+      @printer.interrupt if interrupt
+
+      @printer.group "Summary"
+      [
+        {"Changed", @actions_changed},
+        {"Failed", @actions_failed}
+      ].each do |type, actions|
+        @printer.task type
+        actions.each { |action| @printer.action(**action) }
+      end
+
+      total_actions = @actions_ok.size + @actions_changed.size + @actions_failed.size
+      @printer.task "Totals"
+      [
+        {@actions_ok.size, State::OK},
+        {@actions_changed.size, State::Changed},
+        {@actions_failed.size, State::Failed},
+        {total_actions, nil}
+      ].each do |number, state|
+        @printer.total number, state
+      end
+
       @printer.footer
     end
 

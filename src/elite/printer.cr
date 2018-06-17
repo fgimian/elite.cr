@@ -34,6 +34,16 @@ module Elite
       puts
     end
 
+    def state_colour(state)
+      case state
+      when State::Running then :white
+      when State::Failed  then :light_red
+      when State::Changed then :light_yellow
+      when State::OK      then :light_green
+      else                     :white
+      end
+    end
+
     # Displays a particular action along with the related message upon failure.
     def action(action : Action, response : ActionResponse | Nil)
       # Determine the state
@@ -41,12 +51,7 @@ module Elite
 
       # Determine the state text and output colour
       print_state = state.to_s.downcase
-      print_colour = case state
-                     when State::Running then :white
-                     when State::Failed  then :light_red
-                     when State::Changed then :light_yellow
-                     else                     :light_green # State::OK
-                     end
+      print_colour = state_colour(state)
 
       # Prettify arguments and action for printing
       print_arguments_s = [] of String
@@ -121,36 +126,15 @@ module Elite
       nil
     end
 
-    # Displays a final summary after execution of all actions have completed.
-    def summary(actions_ok : Array(ActionDetails), actions_changed : Array(ActionDetails),
-                actions_failed : Array(ActionDetails), interrupt = false)
-      puts if interrupt
+    def interrupt
+      puts
+    end
 
-      group "Summary"
+    def total(number : Int32, state : State | Nil = nil)
+      print_state = state ? state.to_s.downcase : "total"
+      print_colour = state_colour(state)
 
-      # Display any actions that caused changes.
-      unless actions_changed.empty?
-        task "Changed"
-        actions_changed.each do |changed_action|
-          action(**changed_action)
-        end
-      end
-
-      # Display any failed actions.
-      unless actions_failed.empty?
-        task "Failed"
-        actions_failed.each do |failed_action|
-          action(**failed_action)
-        end
-      end
-
-      # Display all totals
-      total_actions = actions_ok.size + actions_changed.size + actions_failed.size
-      task "Totals"
-      printf "%s%4d\n", Utils.center("ok", 10).colorize.light_green, actions_ok.size
-      printf "%s%4d\n", Utils.center("changed", 10).colorize.light_yellow, actions_changed.size
-      printf "%s%4d\n", Utils.center("failed", 10).colorize.light_red, actions_failed.size
-      printf "%s%4d\n", Utils.center("total", 10), total_actions
+      printf "%s%4d\n", Utils.center(print_state, 10).colorize(print_colour), number
     end
   end
 end

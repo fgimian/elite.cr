@@ -1,3 +1,4 @@
+require "colorize"
 require "unixium"
 
 module Elite
@@ -22,14 +23,14 @@ module Elite
     # to #task.
     def group(name : String)
       puts
-      puts "#{ANSI::BOLD}#{ANSI::UNDERLINE}#{name}#{ANSI::ENDC}"
+      puts name.colorize.bold.underline
     end
 
     # Prints task information within a group using the *name* provided.  This should be
     # followed by a call to #action.
     def task(name : String)
       puts
-      puts "#{ANSI::BOLD}#{name}#{ANSI::ENDC}"
+      puts name.colorize.bold
       puts
     end
 
@@ -41,10 +42,10 @@ module Elite
       # Determine the state text and output colour
       print_state = state.to_s.downcase
       print_colour = case state
-                     when State::Running then ANSI::WHITE
-                     when State::Failed  then ANSI::RED
-                     when State::Changed then ANSI::YELLOW
-                     else                     ANSI::GREEN # State::OK
+                     when State::Running then :white
+                     when State::Failed  then :light_red
+                     when State::Changed then :light_yellow
+                     else                     :light_green # State::OK
                      end
 
       # Prettify arguments and action for printing
@@ -67,8 +68,8 @@ module Elite
 
         [
           {print_colour, Utils.center(print_state, 10)},
-          {ANSI::BLUE, print_action},
-          {ANSI::YELLOW, print_arguments}
+          {:light_blue, print_action},
+          {:light_yellow, print_arguments}
         ].each do |colour, text|
           print_chars += text.size
 
@@ -76,10 +77,10 @@ module Elite
           # crop the text and stop processing further text.
           if print_chars > max_chars
             chop_chars = print_chars - max_chars + 3
-            print_status += "#{colour}#{text[0...-chop_chars]}...#{ANSI::ENDC}"
+            print_status += "#{text[0...-chop_chars]}...".colorize(colour).to_s
             break
           else
-            print_status += "#{colour}#{text}#{ANSI::ENDC}"
+            print_status += text.colorize(colour).to_s
           end
         end
 
@@ -98,17 +99,18 @@ module Elite
         end
 
         puts(
-          "#{print_colour}#{Utils.center(print_state, 10)}#{ANSI::ENDC}" \
-          "#{ANSI::BLUE}#{print_action}#{ANSI::ENDC}" \
-          "#{ANSI::YELLOW}#{print_arguments}#{ANSI::ENDC}"
+          "#{Utils.center(print_state, 10).colorize(print_colour)}" \
+          "#{print_action.colorize.light_blue}" \
+          "#{print_arguments.colorize.light_yellow}"
         )
 
         # Display the failure message if necessary
         if state == State::Failed && response
           message = response.as(ActionResponse).data.as(ErrorData).message
           puts(
-            "#{ANSI::BLUE}#{Utils.center("", 10)}message:#{ANSI::ENDC} " \
-            "#{ANSI::YELLOW}#{message}#{ANSI::ENDC}"
+            "#{Utils.center("", 10)}" \
+            "#{"message: ".colorize.light_blue}" \
+            "#{message.colorize.light_yellow}"
           )
         end
 
@@ -139,9 +141,9 @@ module Elite
       # Display all totals
       total_actions = actions_ok.size + actions_changed.size + actions_failed.size
       task "Totals"
-      printf "%s%4d\n", "#{ANSI::GREEN}#{Utils.center("ok", 10)}#{ANSI::ENDC}", actions_ok.size
-      printf "%s%4d\n", "#{ANSI::YELLOW}#{Utils.center("changed", 10)}#{ANSI::ENDC}", actions_changed.size
-      printf "%s%4d\n", "#{ANSI::RED}#{Utils.center("failed", 10)}#{ANSI::ENDC}", actions_failed.size
+      printf "%s%4d\n", Utils.center("ok", 10).colorize.light_green, actions_ok.size
+      printf "%s%4d\n", Utils.center("changed", 10).colorize.light_yellow, actions_changed.size
+      printf "%s%4d\n", Utils.center("failed", 10).colorize.light_red, actions_failed.size
       printf "%s%4d\n", Utils.center("total", 10), total_actions
     end
   end

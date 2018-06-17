@@ -1,20 +1,5 @@
 module Elite::ANSI
-  # Text Styles
-  BOLD = "\x1b[1m"
-  ITALIC = "\x1b[3m"
-  UNDERLINE = "\x1b[4m"
-
-  # Bright Colours
-  RED = "\x1b[91m"
-  GREEN = "\x1b[92m"
-  YELLOW = "\x1b[93m"
-  BLUE = "\x1b[94m"
-  PURPLE = "\x1b[95m"
-  CYAN = "\x1b[96m"
-  WHITE = "\x1b[97m"
-  ENDC = "\x1b[0m"
-
-  # Other Escape Sequences
+  # Escape Sequences
   CLEAR_LINE = "\x1b[0K"
   HIDE_CURSOR = "\x1b[?25l"
   SHOW_CURSOR = "\x1b[?25h"

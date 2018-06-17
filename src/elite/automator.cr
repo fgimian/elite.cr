@@ -22,12 +22,11 @@ module Elite
         @actions[state].each { |action| @printer.action(**action) }
       end
 
-      total_actions = @actions.map { |state, actions| actions.size }.sum
       @printer.task "Totals"
-      [State::OK, State::Changed, State::Failed, nil].each do |state|
-        number = state ? @actions[state].size : total_actions
-        @printer.total number, state
+      [State::OK, State::Changed, State::Failed].each do |state|
+        @printer.total @actions[state].size, state
       end
+      @printer.total @actions.map { |state, actions| actions.size }.sum
 
       @printer.footer
     end

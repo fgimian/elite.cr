@@ -17,6 +17,12 @@ end
 
 def elite
   automator = Elite::Automator.new
+
+  Signal::INT.trap do
+    automator.footer(interrupt: true)
+    exit
+  end
+
   automator.header
   with automator yield
   automator.footer

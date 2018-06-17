@@ -123,19 +123,25 @@ module Elite
 
     # Displays a final summary after execution of all actions have completed.
     def summary(actions_ok : Array(ActionDetails), actions_changed : Array(ActionDetails),
-                actions_failed : Array(ActionDetails))
+                actions_failed : Array(ActionDetails), interrupt = false)
+      puts if interrupt
+
       group "Summary"
 
       # Display any actions that caused changes.
-      task "Changed"
-      actions_changed.each do |changed_action|
-        action(**changed_action)
+      unless actions_changed.empty?
+        task "Changed"
+        actions_changed.each do |changed_action|
+          action(**changed_action)
+        end
       end
 
       # Display any failed actions.
-      task "Failed"
-      actions_failed.each do |failed_action|
-        action(**failed_action)
+      unless actions_failed.empty?
+        task "Failed"
+        actions_failed.each do |failed_action|
+          action(**failed_action)
+        end
       end
 
       # Display all totals

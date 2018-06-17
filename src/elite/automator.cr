@@ -13,8 +13,8 @@ module Elite
       @printer.header
     end
 
-    def footer
-      @printer.summary(@actions_ok, @actions_changed, @actions_failed)
+    def footer(interrupt = false)
+      @printer.summary(@actions_ok, @actions_changed, @actions_failed, interrupt)
       @printer.footer
     end
 

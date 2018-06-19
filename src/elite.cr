@@ -4,11 +4,10 @@ require "./elite/action"
 require "./elite/actions/*"
 require "./elite/automator"
 # Remaining libraries don't define macros and can be required in any order.
-require "./elite/ansi"
 require "./elite/printer"
 require "./elite/state"
-require "./elite/utils"
 require "./elite/version"
+require "./elite/utils/*"
 
 # TODO: Write documentation for `Elite`
 module Elite

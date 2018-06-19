@@ -1,8 +1,10 @@
+require "unixium"
+
 module Elite
   alias ActionDetails = {action: Action, response: ActionResponse}
 
   class Automator
-    @current_options : NamedTuple(changed: Bool?, continue_on_failure: Bool)?
+    @current_options : NamedTuple(changed: Bool?, continue_on_failure: Bool, sudo: Bool)?
 
     def initialize
       @printer = Printer.new
@@ -10,10 +12,48 @@ module Elite
         hash[key] = [] of ActionDetails
       end
       @current_options = nil
+
+      @user_uid = 0_u32
+      @user_gid = 0_u32
+
+      @root_env = {} of String => String
+      @user_env = {} of String => String
     end
 
     def header
       @printer.header
+
+      @printer.group "Preparation"
+
+      user_uid_s, user_gid_s, user_name = ENV["SUDO_UID"]?, ENV["SUDO_GID"]?, ENV["SUDO_USER"]?
+      unless (Unixium::Permissions.uid == 0 && Unixium::Permissions.gid == 0 &&
+              user_uid_s && user_gid_s && user_name)
+        # TODO: print a sexy error
+        puts "Error: Elite must be run using sudo"
+        exit 1
+      end
+
+      begin
+        @user_uid = user_uid_s.to_u32
+        @user_gid = user_gid_s.to_u32
+      rescue ArgumentError
+        # TODO: print a sexy error
+        puts "The sudo uid and/or gids contain an invalid value"
+        exit 1
+      end
+
+      @root_env = ENV.to_h
+
+      # Build the user's environment using various details
+      @user_env = ENV.to_h
+      user = Unixium::Users.get(ENV["SUDO_USER"])
+      @user_env.merge!({"USER" => user.name, "LOGNAME" => user.name, "HOME" => user.dir,
+                        "SHELL" => user.shell, "PWD" => Dir.current})
+      ["OLDPWD", "USERNAME", "MAIL"].each { |key| @user_env.delete(key) }
+
+      Unixium::Permissions.egid(@user_gid)
+      Unixium::Permissions.euid(@user_uid)
+      ENV.from(@user_env)
     end
 
     def footer(interrupt = false)
@@ -51,14 +91,13 @@ module Elite
 
       if environment
         # Backup the original environment
-        env_original = {} of String => String
-        ENV.each { |key, value| env_original[key] = value }
+        env_original = ENV.to_h
 
         # Modify the environment as requested
         environment.each { |key, value| ENV[key] = value }
       end
 
-      @current_options = {changed: changed, continue_on_failure: continue_on_failure}
+      @current_options = {changed: changed, continue_on_failure: continue_on_failure, sudo: sudo}
       begin
         with self yield
       ensure
@@ -66,15 +105,20 @@ module Elite
 
         # Restore the original environment
         if environment && env_original
-          ENV.clear
-          env_original.each { |key, value| ENV[key] = value }
+          ENV.from(env_original)
         end
       end
     end
 
     {% for action_class in Action.subclasses %}
       def {{ action_class.constant("ACTION_NAME").id }}
-        action = {{ action_class }}.new
+
+        if @current_options && @current_options.as(NamedTuple)[:sudo]
+          action = {{ action_class }}.new(uid: 0_u32, gid: 0_u32)
+          ENV.from(@root_env)
+        else
+          action = {{ action_class }}.new(uid: @user_uid, gid: @user_gid)
+        end
         with action yield
 
         begin
@@ -82,6 +126,10 @@ module Elite
           response = action.invoke
         rescue ex : ActionError
           response = ex.response
+        ensure
+          if @current_options && @current_options.as(NamedTuple)[:sudo]
+            ENV.from(@user_env)
+          end
         end
 
         if @current_options && !@current_options.as(NamedTuple)[:changed].nil?

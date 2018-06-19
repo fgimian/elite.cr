@@ -38,6 +38,12 @@ module Elite
   abstract class Action
     ACTION_NAME = nil
 
+    @uid : UInt32?
+    @gid : UInt32?
+
+    def initialize(@uid = nil, @gid = nil)
+    end
+
     macro inherited
       # We must define dedicated class constants for all inherited classes or we end up sharing
       # the abstract class constants which causes issues.
@@ -64,7 +70,7 @@ module Elite
         {% unless choices.empty? %}
           unless {{ choices }}.includes?(value)
             choices_s = {{ choices[0...-1].join(", ") }} + " or " + {{ choices[-1] }}
-            raise ActionArgumentError.new("{{ name.var }} must be one of #{choices_s}")
+            raise ActionArgumentError.new("The argument {{ name.var }} must be one of #{choices_s}")
           end
         {% end %}
 
@@ -76,7 +82,7 @@ module Elite
     end
 
     def process
-      raise NotImplementedError.new("please implement a process method for your action")
+      raise NotImplementedError.new("Please implement a process method for your action")
     end
 
     def ok(data = nil)
@@ -97,7 +103,8 @@ module Elite
       process = Process.new(
         command.first, command[1..-1], **options,
         output: capture_output ? Process::Redirect::Pipe : Process::Redirect::Close,
-        error: capture_error ? Process::Redirect::Pipe : Process::Redirect::Close
+        error: capture_error ? Process::Redirect::Pipe : Process::Redirect::Close,
+        uid: @uid, gid: @gid
       )
 
       # Capture output if required
@@ -142,7 +149,7 @@ module Elite
         def invoke
           {% for argument_name in action_class.constant("MANDATORY_ARGUMENT_NAMES") %}
             if @{{ argument_name.id }}.nil?
-              raise ActionArgumentError.new("argument {{ argument_name.id }} is mandatory")
+              raise ActionArgumentError.new("Argument {{ argument_name.id }} is mandatory")
             end
           {% end %}
 

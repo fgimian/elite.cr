@@ -82,16 +82,13 @@ class Process
 
     @pid = Process.fork_internal(run_hooks: false) do
       # Reduce user permissions for the newly forked process if necessary
-      if gid.is_a?(UInt32) || uid.is_a?(UInt32)
-        egid = Unixium::Permissions.egid
-        euid = Unixium::Permissions.euid
-
+      if gid || uid
         Unixium::Permissions.egid(0_u32)
         Unixium::Permissions.euid(0_u32)
-        Unixium::Permissions.gid(gid) if gid.is_a?(UInt32)
-        Unixium::Permissions.uid(uid) if uid.is_a?(UInt32)
-        Unixium::Permissions.egid(egid)
-        Unixium::Permissions.euid(euid)
+        Unixium::Permissions.gid(gid) if gid
+        Unixium::Permissions.uid(uid) if uid
+        Unixium::Permissions.egid(gid) if gid
+        Unixium::Permissions.euid(uid) if uid
       end
 
       begin

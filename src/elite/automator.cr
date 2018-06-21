@@ -8,15 +8,13 @@ module Elite
 
     def initialize
       @printer = Printer.new
-      @actions = Hash(State, Array(ActionDetails)).new do |hash, key|
+      @executed_actions = Hash(State, Array(ActionDetails)).new do |hash, key|
         hash[key] = [] of ActionDetails
       end
       @current_options = nil
-
+      @root_env = {} of String => String
       @user_uid = 0_u32
       @user_gid = 0_u32
-
-      @root_env = {} of String => String
       @user_env = {} of String => String
     end
 
@@ -27,9 +25,10 @@ module Elite
 
       user_uid_s, user_gid_s, user_name = ENV["SUDO_UID"]?, ENV["SUDO_GID"]?, ENV["SUDO_USER"]?
       unless (Unixium::Permissions.uid == 0 && Unixium::Permissions.gid == 0 &&
-              user_uid_s && user_gid_s && user_name)
+              user_uid_s && user_gid_s && user_name &&
+              user_uid_s != "0" && user_gid_s != "0" && user_name != "root")
         # TODO: print a sexy error
-        puts "Error: Elite must be run using sudo"
+        puts "Error: Elite must be run using sudo via a regular user account"
         exit 1
       end
 
@@ -42,15 +41,17 @@ module Elite
         exit 1
       end
 
+      # Copy root's environment variables for future use
       @root_env = ENV.to_h
 
       # Build the user's environment using various details
+      user = Unixium::Users.get(user_name)
       @user_env = ENV.to_h
-      user = Unixium::Users.get(ENV["SUDO_USER"])
       @user_env.merge!({"USER" => user.name, "LOGNAME" => user.name, "HOME" => user.dir,
                         "SHELL" => user.shell, "PWD" => Dir.current})
       ["OLDPWD", "USERNAME", "MAIL"].each { |key| @user_env.delete(key) }
 
+      # Set effective permissions and environment to that of the calling user (demotion)
       Unixium::Permissions.egid(@user_gid)
       Unixium::Permissions.euid(@user_uid)
       ENV.from(@user_env)
@@ -61,16 +62,16 @@ module Elite
 
       @printer.group "Summary"
       [State::Changed, State::Failed].each do |state|
-        next if @actions[state].empty?
+        next if @executed_actions[state].empty?
         @printer.task state.to_s
-        @actions[state].each { |action| @printer.action(**action) }
+        @executed_actions[state].each { |action| @printer.action(**action) }
       end
 
       @printer.task "Totals"
       [State::OK, State::Changed, State::Failed].each do |state|
-        @printer.total @actions[state].size, state
+        @printer.total @executed_actions[state].size, state
       end
-      @printer.total @actions.map { |state, actions| actions.size }.sum
+      @printer.total @executed_actions.map { |state, actions| actions.size }.sum
 
       @printer.footer
     end
@@ -87,38 +88,29 @@ module Elite
 
     def options(sudo = false, changed : Bool? = nil, continue_on_failure = false,
                 environment = {} of String => String)
-      # TODO: Implement sudo capabilities
-
-      if environment
-        # Backup the original environment
-        env_original = ENV.to_h
-
-        # Modify the environment as requested
-        environment.each { |key, value| ENV[key] = value }
-      end
-
       @current_options = {changed: changed, continue_on_failure: continue_on_failure, sudo: sudo}
+      ENV.from(@root_env) if sudo
+      environment.each { |key, value| ENV[key] = value } if environment
+
       begin
         with self yield
       ensure
         @current_options = nil
-
-        # Restore the original environment
-        if environment && env_original
-          ENV.from(env_original)
-        end
+        ENV.from(@user_env) if sudo || environment
       end
     end
 
     {% for action_class in Action.subclasses %}
       def {{ action_class.constant("ACTION_NAME").id }}
-
         if @current_options && @current_options.as(NamedTuple)[:sudo]
-          action = {{ action_class }}.new(uid: 0_u32, gid: 0_u32)
-          ENV.from(@root_env)
+          uid, gid = 0_u32, 0_u32
+          Unixium::Permissions.egid(0_u32)
+          Unixium::Permissions.euid(0_u32)
         else
-          action = {{ action_class }}.new(uid: @user_uid, gid: @user_gid)
+          uid, gid = @user_uid, @user_gid
         end
+
+        action = {{ action_class }}.new(uid, gid)
         with action yield
 
         begin
@@ -128,7 +120,8 @@ module Elite
           response = ex.response
         ensure
           if @current_options && @current_options.as(NamedTuple)[:sudo]
-            ENV.from(@user_env)
+            Unixium::Permissions.egid(@user_gid)
+            Unixium::Permissions.euid(@user_uid)
           end
         end
 
@@ -142,7 +135,7 @@ module Elite
 
         action_details = ActionDetails.new(action: action, response: response)
         @printer.action(**action_details)
-        @actions[response.state] << action_details
+        @executed_actions[response.state] << action_details
 
         raise ex if ex && !(@current_options && @current_options.as(NamedTuple)[:continue_on_failure])
         response

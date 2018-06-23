@@ -1,3 +1,5 @@
+require "unixium"
+
 module Elite
   abstract struct ActionData
   end
@@ -78,6 +80,13 @@ module Elite
       end
     end
 
+    macro file_attribute_arguments
+      argument mode : UInt16, optional: true
+      argument owner : String, optional: true
+      argument group : String, optional: true
+      argument flags : UInt32, optional: true
+    end
+
     def validate_arguments
     end
 
@@ -132,6 +141,65 @@ module Elite
       end
 
       return ProcessResponse.new(status.exit_code, output, error)
+    end
+
+    def set_file_attributes(path)
+      changes_made = false
+
+      mode = @mode
+      owner = @owner
+      group = @group
+
+      begin
+        info = File.info(path)
+      rescue Errno
+        raise ActionProcessingError.new("Unable to obtain details about path: #{path}")
+      end
+
+      # Set the file mode if required
+      if mode && !File.symlink?(path) && info.permissions.to_i != mode
+        begin
+          File.chmod(path, mode.to_i32)
+          changes_made = true
+        rescue Errno
+          raise ActionProcessingError.new("Unable to set the requested mode on path: #{path}")
+        end
+      end
+
+      # Set the file owner and/or groups
+      if owner || group
+        # Obtain the uid of the owner requested
+        uid : Int64 = -1
+        if owner
+          begin
+            uid = Unixium::Users.get(owner).uid.to_i64
+          rescue Unixium::Users::UserNotFoundError
+            raise ActionProcessingError.new("The owner requested was not found")
+          end
+        end
+
+        # Obtain the gid of the group requested
+        gid : Int64 = -1
+        if group
+          begin
+            gid = Unixium::Groups.get(group).gid.to_i64
+          rescue Unixium::Groups::GroupNotFoundError
+            raise ActionProcessingError.new("The group requested was not found")
+          end
+        end
+
+        # Update the owner and/or group if required
+        if owner && info.owner != uid || group && info.group != gid
+          begin
+            File.chown(path, uid, gid)
+            changes_made = true
+          rescue Errno
+            raise ActionProcessingError.new("Unable to set the requested owner on path: #{path}")
+          end
+        end
+      end
+
+      changes_made
     end
   end
 

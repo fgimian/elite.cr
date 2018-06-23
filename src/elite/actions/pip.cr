@@ -63,7 +63,7 @@ module Elite::Actions
 
       # Obtain a list of installed packages
       pip_list_proc = run([executable, "list", "--format", "json"],
-                          output: true, ignore_fail: true)
+                          capture_output: true, ignore_fail: true)
 
       # Check whether the package is installed and whether it is outdated
       if pip_list_proc.exit_code == 0
@@ -86,7 +86,7 @@ module Elite::Actions
           if pip_installed && @state == "latest"
             pip_list_outdated_proc = run(
               [executable, "list", "--format", "json", "--outdated"],
-              output: true, ignore_fail: true
+              capture_output: true, ignore_fail: true
             )
 
             pip_list_outdated_multiple = JSON.parse(pip_list_outdated_proc.output)

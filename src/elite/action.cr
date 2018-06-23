@@ -84,7 +84,7 @@ module Elite
       argument mode : UInt16, optional: true
       argument owner : String, optional: true
       argument group : String, optional: true
-      argument flags : UInt32, optional: true
+      argument flags : Array(String), optional: true
     end
 
     def validate_arguments

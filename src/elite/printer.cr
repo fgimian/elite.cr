@@ -91,7 +91,7 @@ module Elite
 
         print print_status
         STDOUT.flush
-        @overlap_lines = (print_chars / terminal_size.columns).ceil - 1
+        @overlap_lines = (print_chars.to_f64 / terminal_size.columns).ceil.to_i32 - 1
       else
         # Display the current action and its details
         if @overlap_lines

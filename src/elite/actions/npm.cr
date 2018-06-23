@@ -32,13 +32,13 @@ module Elite::Actions
 
     def process
       # Determine the npm executable
-      unless @executable
+      if @executable
+        executable = @executable.as(String)
+      else
         executable = Process.find_executable("npm")
         unless executable
           raise ActionProcessingError.new("Unable to determine npm executable to use")
         end
-      else
-        executable = @executable.as(String)
       end
 
       # Build options relating to where the package will be installed
@@ -54,9 +54,7 @@ module Elite::Actions
                           capture_output: true, ignore_fail: true)
 
       # Check whether the package is installed and whether it is outdated
-      unless npm_list_proc.exit_code == 0
-        npm_installed = false
-      else
+      if npm_list_proc.exit_code == 0
         # Determine if the package is installed and/or outdated
         begin
           npm_list_multiple = JSON.parse(npm_list_proc.output)
@@ -80,6 +78,8 @@ module Elite::Actions
         rescue JSON::ParseException | IndexError | KeyError
           raise ActionProcessingError.new("Unable to parse package information")
         end
+      else
+        npm_installed = false
       end
 
       # Prepare any user provided options
@@ -123,12 +123,12 @@ module Elite::Actions
           changed
         end
       else # "absent"
-        unless npm_installed
-          ok
-        else
+        if npm_installed
           run([executable, "uninstall"] + location_options + options_a + [name],
               fail_error: "unable to remove the requested package")
           changed
+        else
+          ok
         end
       end
     end

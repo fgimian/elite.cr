@@ -16,11 +16,11 @@ module Elite::Actions
 
       # Check whether the package is installed using only its short name
       # (e.g. fgimian/general/cog will check for a cask called cog)
-      unless cask_list_proc.exit_code == 0
-        cask_installed = false
-      else
+      if cask_list_proc.exit_code == 0
         cask_list = cask_list_proc.output.chomp.split("\n")
         cask_installed = cask_list.includes?(name_short)
+      else
+        cask_installed = false
       end
 
       # Install or remove the package as requested
@@ -30,7 +30,7 @@ module Elite::Actions
           ok
         else
           run(["brew", "cask", "install"] + options_a + [name],
-              fail_error="unable to install the requested package")
+              fail_error: "unable to install the requested package")
           changed
         end
       when "latest"
@@ -45,12 +45,12 @@ module Elite::Actions
             cask_outdated = cask_list.includes?(name_short)
           end
 
-          unless cask_outdated
-            ok
-          else
+          if cask_outdated
             run(["brew", "cask", "upgrade"] + options_a + [name],
                 fail_error: "unable to upgrade the requested package")
             changed
+          else
+            ok
           end
         else
           run(["brew", "cask", "install"] + options_a + [name],
@@ -58,12 +58,12 @@ module Elite::Actions
           changed
         end
       else # "absent"
-        unless cask_installed
-          ok
-        else
+        if cask_installed
           run(["brew", "cask", "remove"] + options_a + [name],
               fail_error: "unable to remove the requested package")
           changed
+        else
+          ok
         end
       end
     end

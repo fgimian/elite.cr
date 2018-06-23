@@ -18,9 +18,7 @@ module Elite::Actions
                            capture_output: true, ignore_fail: true)
 
       # Check whether the package is installed and whether it is outdated
-      unless brew_info_proc.exit_code == 0
-        brew_installed = false
-      else
+      if brew_info_proc.exit_code == 0
         # Determine if the package is installed and/or outdated
         begin
           brew_info_multiple = JSON.parse(brew_info_proc.output.to_s)
@@ -31,6 +29,8 @@ module Elite::Actions
         rescue JSON::ParseException | IndexError | KeyError
           raise ActionProcessingError.new("Unable to parse installed package information")
         end
+      else
+        brew_installed = false
       end
 
       # Install, upgrade or remove the package as requested
@@ -56,12 +56,12 @@ module Elite::Actions
           changed
         end
       else # "absent"
-        unless brew_installed
-          ok
-        else
+        if brew_installed
           run(["brew", "remove"] + options_a + [name],
               fail_error: "Unable to remove the requested package")
           changed
+        else
+          ok
         end
       end
     end

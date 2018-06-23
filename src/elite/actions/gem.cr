@@ -22,13 +22,13 @@ module Elite::Actions
       name = @name.as(String)
 
       # Determine the gem executable
-      unless @executable
+      if @executable
+        executable = @executable.as(String)
+      else
         executable = Process.find_executable("gem")
         unless executable
           raise ActionProcessingError.new("Unable to find a gem executable to use")
         end
-      else
-        executable = @executable.as(String)
       end
 
       # Obtain the specification of the requested package containing all installed versions
@@ -39,9 +39,7 @@ module Elite::Actions
       # Check whether the package is installed and whether it is outdated
       gem_versions = [] of String
 
-      unless gem_spec_proc.exit_code == 0
-        gem_installed = false
-      else
+      if gem_spec_proc.exit_code == 0
         gem_installed = true
 
         # Determine if the package is installed and/or outdated
@@ -62,6 +60,8 @@ module Elite::Actions
         rescue YAML::ParseException | KeyError
           raise ActionProcessingError.new("Unable to parse installed package listing")
         end
+      else
+        gem_installed = false
       end
 
       # Prepare any user provided options

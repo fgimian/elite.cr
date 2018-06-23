@@ -63,12 +63,10 @@ module Elite::Actions
 
       # Obtain a list of installed packages
       pip_list_proc = run([executable, "list", "--format", "json"],
-                          output=true, ignore_fail=true)
+                          output: true, ignore_fail: true)
 
       # Check whether the package is installed and whether it is outdated
-      unless pip_list_proc.exit_code == 0
-        pip_installed = false
-      else
+      if pip_list_proc.exit_code == 0
         # Determine if the package is installed and/or outdated
         begin
           pip_list_multiple = JSON.parse(pip_list_proc.output)
@@ -88,7 +86,7 @@ module Elite::Actions
           if pip_installed && @state == "latest"
             pip_list_outdated_proc = run(
               [executable, "list", "--format", "json", "--outdated"],
-              output=true, ignore_fail=true
+              output: true, ignore_fail: true
             )
 
             pip_list_outdated_multiple = JSON.parse(pip_list_outdated_proc.output)
@@ -101,6 +99,8 @@ module Elite::Actions
         rescue JSON::ParseException | IndexError | KeyError
           raise ActionProcessingError.new("Unable to parse installed package listing")
         end
+      else
+        pip_installed = false
       end
 
       # Prepare any user provided options
@@ -114,11 +114,11 @@ module Elite::Actions
             ok
           elsif pip_installed
             run([executable, "install"] + options_a + ["#{name}==#{@version}"],
-                fail_error="unable to reinstall the requested package version")
+                fail_error: "Unable to reinstall the requested package version")
             changed
           else
             run([executable, "install"] + options_a + ["#{name}==#{@version}"],
-                fail_error="unable to install the requested package version")
+                fail_error: "Unable to install the requested package version")
             changed
           end
         else
@@ -126,7 +126,7 @@ module Elite::Actions
             ok
           else
             run([executable, "install"] + options_a + [name],
-                fail_error="unable to install the requested package")
+                fail_error: "Unable to install the requested package")
             changed
           end
         end
@@ -135,20 +135,20 @@ module Elite::Actions
           ok
         elsif pip_installed && pip_outdated
           run([executable, "install", "--upgrade"] + options_a + [name],
-              fail_error="unable to upgrade the requested package")
+              fail_error: "Unable to upgrade the requested package")
           changed
         else
           run([executable, "install"] + options_a + [name],
-              fail_error="unable to install the requested package")
+              fail_error: "Unable to install the requested package")
           changed
         end
       else # "absent"
-        unless pip_installed
-          ok
-        else
+        if pip_installed
           run([executable, "uninstall", "--yes"] + options_a + [name],
-              fail_error="unable to remove the requested package")
+              fail_error: "Unable to remove the requested package")
           changed
+        else
+          ok
         end
       end
     end

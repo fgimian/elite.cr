@@ -17,11 +17,11 @@ module Elite::Actions
       tap_list_proc = run(%w(brew tap), capture_output: true, ignore_fail: true)
 
       # Check whether the package is installed
-      unless tap_list_proc.exit_code == 0
-        tapped = false
-      else
+      if tap_list_proc.exit_code == 0
         tap_list = tap_list_proc.output.chomp.split("\n")
         tapped = tap_list.includes?(name)
+      else
+        tapped = false
       end
 
       # Install or remove the package as requested
@@ -35,12 +35,12 @@ module Elite::Actions
           changed
         end
       else # "absent"
-        unless tapped
-          ok
-        else
+        if tapped
           run(["brew", "untap", name],
               fail_error: "unable to untap the requested repository")
           changed
+        else
+          ok
         end
       end
     end

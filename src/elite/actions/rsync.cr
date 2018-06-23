@@ -18,13 +18,13 @@ module Elite::Actions
       source = File.expand_path(@source.as(String))
 
       # Determine the rsync executable
-      unless @executable
+      if @executable
+        executable = @executable.as(String)
+      else
         executable = Process.find_executable("rsync")
         unless executable
           raise ActionProcessingError.new("Unable to find rsync executable to use")
         end
-      else
-        executable = @executable.as(String)
       end
 
       # Create a list to store our rsync options

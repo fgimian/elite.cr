@@ -71,7 +71,7 @@ module Elite
       [State::OK, State::Changed, State::Failed].each do |state|
         @printer.total @executed_actions[state].size, state
       end
-      @printer.total @executed_actions.map { |state, actions| actions.size }.sum
+      @printer.total @executed_actions.values.map { |actions| actions.size }.sum
 
       @printer.footer
     end

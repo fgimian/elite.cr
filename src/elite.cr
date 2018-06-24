@@ -1,3 +1,5 @@
+# TODO: Consider adding all requires here instead of to individual files
+
 # Actions must be required after the abstract base class is defined and the automater must be
 # required after the actions so it can create appropriate methods.
 require "./elite/action"
@@ -11,7 +13,6 @@ require "./elite/utils/*"
 
 # TODO: Write documentation for `Elite`
 module Elite
-  # TODO: Put your code here
 end
 
 def elite

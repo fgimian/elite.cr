@@ -27,7 +27,7 @@ module Elite
       unless (Unixium::Permissions.uid == 0 && Unixium::Permissions.gid == 0 &&
               user_uid_s && user_gid_s && user_name &&
               user_uid_s != "0" && user_gid_s != "0" && user_name != "root")
-        # TODO: print a sexy error
+        # TODO: Handle errors gracefully here
         puts "Error: Elite must be run using sudo via a regular user account"
         exit 1
       end
@@ -36,7 +36,7 @@ module Elite
         @user_uid = user_uid_s.to_u32
         @user_gid = user_gid_s.to_u32
       rescue ArgumentError
-        # TODO: print a sexy error
+        # TODO: Handle errors gracefully here
         puts "The sudo uid and/or gids contain an invalid value"
         exit 1
       end

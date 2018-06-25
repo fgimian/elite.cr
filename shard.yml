@@ -4,6 +4,6 @@ version: 0.1.0
 authors:
   - Fotis Gimian <fgimiansoftware@gmail.com>
 
-crystal: 0.24.2+395
+crystal: 0.25.0
 
 license: MIT

@@ -29,7 +29,7 @@ module Elite::Actions
       begin
         File.open(path) do |file|
           file.each_line do |config_setting_line|
-            config_setting, config_value = config_setting_line.rstrip.split("=", 2)
+            config_setting, config_value = config_setting_line.chomp.split("=", 2)
             settings[config_setting] = config_value
           end
         end
